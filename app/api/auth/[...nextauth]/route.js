@@ -16,28 +16,30 @@ const handler = NextAuth({
     });
     session.user.id = sessionUser._id.toString();
   },
-  async signIn({ profile }) {
-    try {
-      //serverless lambda function dynamodb
-      await connectToDB();
+  callbacks: {
+    async signIn({ profile }) {
+      try {
+        //serverless lambda function dynamodb
+        await connectToDB();
 
-      //check if user is already present
-      const userExists = await User.findOne({
-        email: profile.email,
-      });
-      //else create  new
-      if (!userExists) {
-        await User.create({
+        //check if user is already present
+        const userExists = await User.findOne({
           email: profile.email,
-          username: profile.username.replace(" ", "").toLowerCase(),
-          image: profile.picture,
         });
+        //else create  new
+        if (!userExists) {
+          await User.create({
+            email: profile.email,
+            username: profile.name.replace(" ", "").toLowerCase(),
+            image: profile.picture,
+          });
+        }
+        return true;
+      } catch (error) {
+        console.log(error);
+        return false;
       }
-      return true;
-    } catch (error) {
-      console.log(error);
-      return false;
-    }
+    },
   },
 });
 
